@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Billing Local</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logoBox"><img id="brandLogo" alt="Logo" /></div>
+      <div class="brandMeta">
+        <div id="brandName" class="brandName">Billing</div>
+        <div id="brandSub" class="brandSub">LocalStorage • Sin Firebase</div>
+      </div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpiLabel">Ventas del mes</div>
+        <div id="kpiSales" class="kpiValue">$0</div>
+      </div>
+      <div class="kpi" id="kpiBackupCard">
+        <div class="kpiLabel">Backup</div>
+        <div id="kpiBackup" class="kpiValue">OK</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <a href="#/dashboard" class="navLink">Dashboard</a>
+      <a href="#/new" class="navLink">Nuevo</a>
+      <a href="#/clients" class="navLink">Clientes</a>
+      <a href="#/settings" class="navLink">⚙️</a>
+    </nav>
+  </header>
+
+  <main class="wrap">
+    <!-- PUBLIC VIEW -->
+    <section id="viewPublic" class="card" hidden>
+      <div class="row between">
+        <h2 id="pubTitle" class="h2">Documento</h2>
+        <span id="pubStatus" class="pill">—</span>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <div class="label">Cliente</div>
+          <div id="pubClient" class="value">—</div>
+        </div>
+        <div class="panel">
+          <div class="label">Total</div>
+          <div id="pubTotal" class="value">$0</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="label">Opciones de pago</div>
+        <div id="pubPayInfo" class="muted">—</div>
+      </div>
+
+      <div class="actions">
+        <button id="btnAccept" class="btn">Aceptar</button>
+        <button id="btnDecline" class="btn ghost">Declinar</button>
+        <button id="btnMarkPaid" class="btn success">Marcar Pagada</button>
+        <a id="btnStripe" class="btn link" target="_blank" rel="noopener">Pagar con tarjeta</a>
+      </div>
+
+      <div class="divider"></div>
+      <a href="#/dashboard" class="muted">← Volver al dashboard</a>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="viewDashboard" class="card" hidden>
+      <div class="row between">
+        <h2 class="h2">Dashboard</h2>
+        <div class="muted" id="dashMeta"></div>
+      </div>
+
+      <div class="tabs">
+        <button class="tab active" data-tab="all">Todo</button>
+        <button class="tab" data-tab="quotes">Cotizaciones</button>
+        <button class="tab" data-tab="invoices">Facturas</button>
+      </div>
+
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Tipo</th>
+              <th>Cliente</th>
+              <th>Total</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="docsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- NEW -->
+    <section id="viewNew" class="card" hidden>
+      <div class="row between">
+        <h2 class="h2">Nuevo documento</h2>
+        <span class="muted">Cotización o Factura</span>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Tipo</label>
+          <select id="docType" class="input">
+            <option value="quote">Cotización</option>
+            <option value="invoice">Factura</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="label">Cliente</label>
+          <select id="docClient" class="input"></select>
+          <div class="muted mini">Tip: crea clientes en “Clientes” para seleccionarlos aquí.</div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Subtotal</label>
+          <input id="docSubtotal" class="input" type="number" step="0.01" value="0" />
+        </div>
+        <div>
+          <label class="label">IVU %</label>
+          <input id="docTaxRate" class="input" type="number" step="0.01" value="11.5" />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Método de pago (si es Factura)</label>
+          <select id="docPayMethod" class="input">
+            <option value="cash">Cash (en persona)</option>
+            <option value="ath">ATH Móvil</option>
+            <option value="stripe">Tarjeta (link)</option>
+          </select>
+        </div>
+        <div>
+          <label class="label">Link tarjeta (Stripe Payment Link)</label>
+          <input id="docStripeLink" class="input" placeholder="https://buy.stripe.com/..." />
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label class="label">Notas</label>
+          <input id="docNotes" class="input" placeholder="Detalles, condiciones, etc." />
+        </div>
+        <div class="panel">
+          <div class="label">Total</div>
+          <div id="docTotal" class="value">$0</div>
+          <div class="muted mini">Total = Subtotal + IVU.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnCreate" class="btn">Crear</button>
+        <button id="btnClear" class="btn ghost">Limpiar</button>
+      </div>
+    </section>
+
+    <!-- CLIENTS -->
+    <section id="viewClients" class="card" hidden>
+      <div class="row between">
+        <h2 class="h2">Clientes</h2>
+        <button id="btnNewClient" class="btn">+ Añadir</button>
+      </div>
+
+      <div id="clientForm" class="panel" hidden>
+        <div class="grid2">
+          <div>
+            <label class="label">Nombre</label>
+            <input id="cName" class="input" />
+          </div>
+          <div>
+            <label class="label">Teléfono</label>
+            <input id="cPhone" class="input" />
+          </div>
+        </div>
+        <div class="grid2">
+          <div>
+            <label class="label">Email</label>
+            <input id="cEmail" class="input" />
+          </div>
+          <div>
+            <label class="label">Dirección</label>
+            <input id="cAddr" class="input" />
+          </div>
+        </div>
+        <div class="actions">
+          <button id="btnSaveClient" class="btn success">Guardar</button>
+          <button id="btnCancelClient" class="btn ghost">Cancelar</button>
+        </div>
+      </div>
+
+      <div class="tableWrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Teléfono</th>
+              <th>Email</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="clientsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="viewSettings" class="card" hidden>
+      <div class="row between">
+        <h2 class="h2">Configuración</h2>
+        <span class="muted">Marca • Colores • Backup</span>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <div class="label">Empresa</div>
+          <input id="sCompany" class="input" placeholder="Nombre comercial" />
+          <input id="sPhone" class="input" placeholder="Teléfono" />
+          <input id="sEmail" class="input" placeholder="Email" />
+          <input id="sAddr" class="input" placeholder="Dirección" />
+        </div>
+
+        <div class="panel">
+          <div class="label">Logo</div>
+          <input id="sLogo" class="input" type="file" accept="image/*" />
+          <div class="muted mini">Se guarda en LocalStorage como DataURL (rápido y sin drama).</div>
+          <div class="logoPreview"><img id="logoPreview" alt="Preview" /></div>
+        </div>
+      </div>
+
+      <div class="grid2">
+        <div class="panel">
+          <div class="label">Plantilla / Tema</div>
+          <select id="sTheme" class="input">
+            <option value="gold">Gold (corporativo)</option>
+            <option value="blue">Blue (moderno)</option>
+            <option value="emerald">Emerald (premium)</option>
+            <option value="mono">Mono (minimal)</option>
+          </select>
+          <div class="muted mini">Cambia colores globales. Las facturas/cotizaciones heredan esto.</div>
+        </div>
+
+        <div class="panel">
+          <div class="label">Backup</div>
+          <button id="btnBackup" class="btn">Exportar backup (.json)</button>
+          <button id="btnRestore" class="btn ghost">Importar backup (.json)</button>
+          <input id="restoreFile" type="file" accept="application/json" hidden />
+          <div class="muted mini">Si pasan 7 días sin backup, el KPI se pone rojo. Porque disciplina = dinero.</div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button id="btnSaveSettings" class="btn success">Guardar configuración</button>
+        <button id="btnFactoryReset" class="btn danger">Reset total</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span class="muted">Billing Local • v1 • LocalStorage</span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
